@@ -1,0 +1,77 @@
+#Install Java JDK 11
+FROM openjdk:11-jdk-oraclelinux7
+
+#Jmeter version
+ARG JMETER_VERSION=5.2
+  
+#Jmeter environment variables
+ENV JMETER_HOME /opt/apache-jmeter-${JMETER_VERSION}
+ENV JMETER_BIN ${JMETER_HOME}/bin
+ENV JMETER_DOWNLOAD_URL https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz
+
+#Install curl to download Jmeter binary
+RUN yum -y install curl procps
+
+#Download and untar Jmeter binary
+RUN   cd /opt \
+&& curl -L ${JMETER_DOWNLOAD_URL} > apache-jmeter-${JMETER_VERSION}.tgz  \
+&& tar -xzf apache-jmeter-${JMETER_VERSION}.tgz \
+&& rm apache-jmeter-$JMETER_VERSION.tgz
+
+#Add Jmeter plugins manager
+RUN cd ${JMETER_HOME}/lib/ext \
+&& curl -L https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.4/jmeter-plugins-manager-1.4.jar > jmeter-plugins-manager-1.4.jar \
+&& chmod 755 jmeter-plugins-manager-1.4.jar
+
+RUN cd ${JMETER_HOME}/lib \
+&& curl -L -O http://search.maven.org/remotecontent?filepath=kg/apc/cmdrunner/2.2/cmdrunner-2.2.jar \
+&& chmod 775 cmdrunner-2.2.jar
+
+RUN cd ${JMETER_HOME}/lib \
+&& curl -L -O https://repo1.maven.org/maven2/org/json/json/20190722/json-20190722.jar \
+&& chmod 775 json-20190722.jar
+
+RUN cd ${JMETER_HOME}/lib \
+&& curl -L -O https://repo1.maven.org/maven2/com/github/erosb/everit-json-schema/1.12.1/everit-json-schema-1.12.1.jar \
+&& chmod 755 everit-json-schema-1.12.1.jar
+
+RUN cd ${JMETER_HOME}/lib \
+&& curl -L -O https://repo1.maven.org/maven2/com/damnhandy/handy-uri-templates/2.1.8/handy-uri-templates-2.1.8.jar \
+&& chmod 755 handy-uri-templates-2.1.8.jar
+
+
+RUN cd ${JMETER_HOME}/lib/ext \
+&& curl -vvv -L -O https://github.com/zalopay-oss/jmeter-grpc-request/raw/master/dist/bin/jmeter-grpc-request-1.1.2.jar \
+&& chmod 755 jmeter-grpc-request-1.1.2.jar
+
+RUN java -cp ${JMETER_HOME}/lib/ext/jmeter-plugins-manager-1.4.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
+
+#Install additionnal plugins
+# https://jmeter-plugins.org/wiki/ResponseCodesPerSecond/
+# https://jmeter-plugins.org/wiki/AutoStop/
+# https://jmeter-plugins.org/wiki/DbMon/
+# https://jmeter-plugins.org/wiki/RespTimesDistribution/
+# https://jmeter-plugins.org/wiki/GraphsGeneratorListener/
+# https://jmeter-plugins.org/wiki/RawRequest/
+# https://jmeter-plugins.org/wiki/HttpSimpleTableServer/
+# https://jmeter-plugins.org/wiki/JMXMon/
+# https://jmeter-plugins.org/wiki/JSONPathExtractor/
+# https://jmeter-plugins.org/wiki/ResponseTimesVsThreads/
+# https://jmeter-plugins.org/wiki/LockFile/
+# https://jmeter-plugins.org/wiki/ParameterizedController/
+# https://jmeter-plugins.org/wiki/UDPRequest/
+# https://jmeter-plugins.org/wiki/VariablesFromCSV/
+# https://jmeter-plugins.org/wiki/XMLFormatPostProcessor/
+# https://jmeter-plugins.org/wiki/RedisDataSet/
+# https://jmeter-plugins.org/wiki/OAuthSampler/
+# https://jmeter-plugins.org/wiki/PerfMon/
+# https://jmeter-plugins.org/wiki/JMSSampler/
+RUN ${JMETER_BIN}/PluginsManagerCMD.sh install jpgc-graphs-additional,jpgc-autostop,jpgc-dbmon,jpgc-graphs-dist,jpgc-ggl,jpgc-httpraw,jpgc-sts,jpgc-jmxmon,jpgc-json,jpgc-graphs-vs,jpgc-lockfile,jpgc-prmctl,jpgc-udp,jpgc-csvars,jpgc-xml,jpgc-redis,jpgc-oauth,jpgc-perfmon,jpgc-jms
+
+# Set directory and file permissions
+RUN chmod -R 775 ${JMETER_HOME}
+
+WORKDIR ${JMETER_HOME}
+
+# Add Jmeter to PATH
+ENV PATH $PATH:$JMETER_BIN

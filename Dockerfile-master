@@ -1,0 +1,9 @@
+FROM jmeter-base:latest
+USER root
+
+#To launch jmeter gui via docker
+RUN yum install -y libXext.x86_64 libXrender.x86_64 libXtst.x86_64
+
+USER 1000650000
+
+EXPOSE 60000

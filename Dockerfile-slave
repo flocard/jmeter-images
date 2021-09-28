@@ -1,0 +1,10 @@
+FROM jmeter-base:latest
+
+EXPOSE 1099 50000
+
+USER 1000650000
+		
+ENTRYPOINT jmeter-server \
+-Dserver.rmi.localport=50000 \
+-Dserver_port=1099 \
+-Jserver.rmi.ssl.disable=true
